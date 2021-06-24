@@ -14,7 +14,7 @@ const { Schema } = mongoose;
 // build schema
 var userSchema = new mongoose.Schema({
   username: String,
-  exercises: [{ description: String, duration: Number,date: Date}]
+  log: [{ description: String, duration: Number,date: String}]
 });
 
 // build model
@@ -41,23 +41,50 @@ app.post('/api/users', urlencodedParser, function(req, res) {
   res.json({ username: username, _id: _id });
 });
 
-// get request should return as JSON list of all usersnames and associated ids
+// get request should return as JSON list of all usernames and associated ids
 app.get('/api/users', function(req, res) {
   // perform a query on mongoDB, with no parameters
   var users = UserModel.find({ }, 'username _id', function(err, result) {
     if (err) return console.error(err);
-    console.log(result);
+    // console.log(result);
     res.json(result);
   });
   // console.log(users);
   
 });
 
-// TODO: post form date to /api/users/:_id/exercises that returns object with exercise fields added
+// post form date to /api/users/:_id/exercises that returns object with exercise fields added
+app.post('/api/users/:_id/exercises', urlencodedParser,  function(req, res) {
+  // find user with _id
+  UserModel.findById({ _id: req.params._id }, function(err, result) {
+    if (err) return console.error(err);
+    // console.log(result, req.body);
+    // add current exercise
+    var exer = {
+      description: req.body.description, 
+      duration: Number(req.body.duration), 
+      date: req.body.date ? new Date(req.body.date).toDateString() : new Date().toDateString()
+      };
+    result.log.push(exer);
+    // save result
+    result.save(function(err) {
+      if (err) console.error(err);
+    });
+    // output result
+    res.json({ _id: req.params._id, username: result.username, date: exer.date, duration: exer.duration, description: exer.description });
+  });
 
-// TODO: get request to /api/users/:_id/logs retrives full exercise log of any user 
-// must include count property
+});
+
+// get request to /api/users/:_id/logs retrives full exercise log of any user 
+app.get('/api/users/:_id/logs', function(req, res) {
 // can use parameters to request from date, to date, limit in # of records
+  UserModel.findById({ _id: req.params._id }, function(err, result) {
+    if (err) console.error(err);
+    // must include count property
+    res.json({ _id: result._id, username: result.username, count: result.log.length, log: result.log });
+  })
+});
 
 
 const listener = app.listen(process.env.PORT || 3000, () => {
