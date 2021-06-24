@@ -78,7 +78,7 @@ app.post('/api/users/:_id/exercises', urlencodedParser,  function(req, res) {
 
 // get request to /api/users/:_id/logs retrives full exercise log of any user 
 app.get('/api/users/:_id/logs', function(req, res) {
-// can use parameters to request from date, to date, limit in # of records
+// TODO: can use parameters to request from date, to date, limit in # of records
   UserModel.findById({ _id: req.params._id }, function(err, result) {
     if (err) console.error(err);
     // must include count property
